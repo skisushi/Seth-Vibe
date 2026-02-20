@@ -49,6 +49,26 @@ def get_traveler(traveler_id: int) -> sqlite3.Row | None:
         ).fetchone()
 
 
+def list_travelers() -> list[sqlite3.Row]:
+    with get_connection() as conn:
+        return conn.execute("SELECT * FROM travelers ORDER BY id").fetchall()
+
+
+def update_traveler(traveler_id: int, name: str, email: str) -> bool:
+    with get_connection() as conn:
+        cur = conn.execute(
+            "UPDATE travelers SET name = ?, email = ? WHERE id = ?",
+            (name, email, traveler_id)
+        )
+        return cur.rowcount > 0
+
+
+def delete_traveler(traveler_id: int) -> bool:
+    with get_connection() as conn:
+        cur = conn.execute("DELETE FROM travelers WHERE id = ?", (traveler_id,))
+        return cur.rowcount > 0
+
+
 # --- Destinations ---
 
 def add_destination(country: str, city: str = None, region: str = None) -> int:
@@ -58,6 +78,33 @@ def add_destination(country: str, city: str = None, region: str = None) -> int:
             (country, city, region)
         )
         return cur.lastrowid
+
+
+def get_destination(destination_id: int) -> sqlite3.Row | None:
+    with get_connection() as conn:
+        return conn.execute(
+            "SELECT * FROM destinations WHERE id = ?", (destination_id,)
+        ).fetchone()
+
+
+def list_destinations() -> list[sqlite3.Row]:
+    with get_connection() as conn:
+        return conn.execute("SELECT * FROM destinations ORDER BY country, city").fetchall()
+
+
+def update_destination(destination_id: int, country: str, city: str = None, region: str = None) -> bool:
+    with get_connection() as conn:
+        cur = conn.execute(
+            "UPDATE destinations SET country = ?, city = ?, region = ? WHERE id = ?",
+            (country, city, region, destination_id)
+        )
+        return cur.rowcount > 0
+
+
+def delete_destination(destination_id: int) -> bool:
+    with get_connection() as conn:
+        cur = conn.execute("DELETE FROM destinations WHERE id = ?", (destination_id,))
+        return cur.rowcount > 0
 
 
 def get_or_create_destination(country: str, city: str = None, region: str = None) -> int:
@@ -101,6 +148,27 @@ def add_trip(
         return cur.lastrowid
 
 
+def get_trip(trip_id: int) -> sqlite3.Row | None:
+    with get_connection() as conn:
+        return conn.execute(
+            """SELECT tr.*, d.country, d.city, d.region
+               FROM trips tr
+               JOIN destinations d ON d.id = tr.destination_id
+               WHERE tr.id = ?""",
+            (trip_id,)
+        ).fetchone()
+
+
+def list_trips() -> list[sqlite3.Row]:
+    with get_connection() as conn:
+        return conn.execute(
+            """SELECT tr.*, d.country, d.city, d.region
+               FROM trips tr
+               JOIN destinations d ON d.id = tr.destination_id
+               ORDER BY tr.start_date DESC"""
+        ).fetchall()
+
+
 def get_trips_for_traveler(traveler_id: int) -> list[sqlite3.Row]:
     with get_connection() as conn:
         return conn.execute(
@@ -111,6 +179,27 @@ def get_trips_for_traveler(traveler_id: int) -> list[sqlite3.Row]:
                ORDER BY tr.start_date DESC""",
             (traveler_id,)
         ).fetchall()
+
+
+def update_trip(trip_id: int, traveler_id: int, destination_id: int,
+                start_date: str, end_date: str, travel_type: str,
+                accommodation_type: str, notes: str = None) -> bool:
+    with get_connection() as conn:
+        cur = conn.execute(
+            """UPDATE trips
+               SET traveler_id = ?, destination_id = ?, start_date = ?,
+                   end_date = ?, travel_type = ?, accommodation_type = ?, notes = ?
+               WHERE id = ?""",
+            (traveler_id, destination_id, start_date, end_date,
+             travel_type, accommodation_type, notes, trip_id)
+        )
+        return cur.rowcount > 0
+
+
+def delete_trip(trip_id: int) -> bool:
+    with get_connection() as conn:
+        cur = conn.execute("DELETE FROM trips WHERE id = ?", (trip_id,))
+        return cur.rowcount > 0
 
 
 # --- Preferences ---
