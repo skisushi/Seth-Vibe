@@ -1,0 +1,9 @@
+services:
+  veyant:
+    build: .
+    # Bind-mount the db directory so veyant.db persists on the host
+    volumes:
+      - ./veyant/db:/app/veyant/db
+    # Default: seed sample data and initialize the DB.
+    # Override with: docker compose run veyant python database.py
+    command: python seed.py
