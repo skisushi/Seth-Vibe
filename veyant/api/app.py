@@ -164,6 +164,10 @@ def seed_database():
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    import os as _os
     init_db()
-    print("Veyant API running at http://localhost:5000")
-    app.run(debug=True, port=5000)
+    host  = _os.environ.get("FLASK_HOST",  "127.0.0.1")
+    port  = int(_os.environ.get("FLASK_PORT",  "5000"))
+    debug = _os.environ.get("FLASK_DEBUG", "true").lower() == "true"
+    print(f"Veyant API running at http://{host}:{port}")
+    app.run(host=host, port=port, debug=debug)
