@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS destinations (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     country     TEXT NOT NULL,
     city        TEXT,
-    region      TEXT
+    region      TEXT,
+    UNIQUE(country, city, region)
 );
 
 CREATE TABLE IF NOT EXISTS trips (

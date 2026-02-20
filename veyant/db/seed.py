@@ -3,7 +3,7 @@ Veyant - Seed sample traveler history data.
 Run: python seed.py
 """
 
-from database import init_db, add_traveler, get_or_create_destination, add_trip, get_traveler_preferences
+from .database import init_db, add_traveler, get_or_create_destination, add_trip, get_traveler_preferences
 
 SAMPLE_DATA = [
     {

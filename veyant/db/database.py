@@ -31,10 +31,15 @@ def init_db():
 def add_traveler(name: str, email: str) -> int:
     with get_connection() as conn:
         cur = conn.execute(
-            "INSERT INTO travelers (name, email) VALUES (?, ?)",
+            "INSERT OR IGNORE INTO travelers (name, email) VALUES (?, ?)",
             (name, email)
         )
-        return cur.lastrowid
+        if cur.lastrowid:
+            return cur.lastrowid
+        row = conn.execute(
+            "SELECT id FROM travelers WHERE email = ?", (email,)
+        ).fetchone()
+        return row["id"]
 
 
 def get_traveler(traveler_id: int) -> sqlite3.Row | None:
@@ -58,12 +63,19 @@ def add_destination(country: str, city: str = None, region: str = None) -> int:
 def get_or_create_destination(country: str, city: str = None, region: str = None) -> int:
     with get_connection() as conn:
         row = conn.execute(
-            "SELECT id FROM destinations WHERE country = ? AND city IS ? AND region IS ?",
-            (country, city, region)
+            """SELECT id FROM destinations
+               WHERE country = ?
+                 AND (city = ? OR (city IS NULL AND ? IS NULL))
+                 AND (region = ? OR (region IS NULL AND ? IS NULL))""",
+            (country, city, city, region, region)
         ).fetchone()
         if row:
             return row["id"]
-    return add_destination(country, city, region)
+        cur = conn.execute(
+            "INSERT INTO destinations (country, city, region) VALUES (?, ?, ?)",
+            (country, city, region)
+        )
+        return cur.lastrowid
 
 
 # --- Trips ---
